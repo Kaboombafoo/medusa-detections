@@ -26,8 +26,6 @@ Windows VM with Sysmon (process creation, Event ID 1) → log forwarder → Splu
 ```
 detections/
   sigma/     Vendor-neutral Sigma rules (the portable source of truth)
-  splunk/    SPL compiled from the Sigma rules via sigma-cli
-  yara/      File-based IOC rules (planned)
 test-evidence/
   T1490/     Screenshots + test record for the validated rule
 coverage-map.md   The verified ATT&CK target list 
