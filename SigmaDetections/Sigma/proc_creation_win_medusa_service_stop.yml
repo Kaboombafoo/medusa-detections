@@ -1,0 +1,42 @@
+title: Medusa - Service Stop via net.exe or taskkill
+id: d13f3bd5-257d-45c9-ac01-668e6c3a76cd
+status: experimental
+description: |
+    Detects stopping of services or termination of processes via net.exe (net stop)
+    or taskkill.exe, a Service Stop behavior (T1489) used by Medusa ransomware to
+    disable backup, security, database, and other services prior to encryption.
+    NOTE: net stop and taskkill are extremely common in legitimate administration.
+    This rule has a HIGH false-positive surface on its own and is intended to be
+    correlated with security/backup service-name targets, event volume, or a
+    suspicious parent process before alerting in production.
+references:
+    - https://www.cisa.gov/news-events/cybersecurity-advisories/aa25-071a
+    - https://attack.mitre.org/software/S1244/
+    - https://attack.mitre.org/groups/G1051/
+    - https://attack.mitre.org/techniques/T1489/
+author: Generated (sigma authored on Corbin Griffin's behalf) — see repo README scope note
+date: 2026-06-30
+tags:
+    - attack.impact
+    - attack.t1489
+logsource:
+    category: process_creation
+    product: windows
+detection:
+    selection_net_img:
+        - Image|endswith: '\net.exe'
+        - Image|endswith: '\net1.exe'
+        - OriginalFileName:
+              - 'net.exe'
+              - 'net1.exe'
+    selection_net_cli:
+        CommandLine|contains: 'stop'
+    selection_taskkill:
+        - Image|endswith: '\taskkill.exe'
+        - OriginalFileName: 'taskkill.exe'
+    condition: (selection_net_img and selection_net_cli) or selection_taskkill
+falsepositives:
+    - Routine administrative service management (net stop) by admins or scripts
+    - Legitimate process termination via taskkill by admins, installers, or software
+    - Operating system and service-management tooling stopping services normally
+level: medium

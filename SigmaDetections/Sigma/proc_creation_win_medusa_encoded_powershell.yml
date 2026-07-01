@@ -1,0 +1,41 @@
+title: Medusa - Encoded PowerShell Execution
+id: 4016caca-c6a9-4ed7-9ac7-5d998c43f918
+status: experimental
+description: |
+    Detects PowerShell executed with an encoded command payload, mapping to
+    PowerShell execution (T1059.001) with command obfuscation (T1027.010).
+    Medusa operators run Base64-encoded PowerShell for execution and defense
+    evasion. Matches the powershell binary plus an encoded-command flag.
+references:
+    - https://www.cisa.gov/news-events/cybersecurity-advisories/aa25-071a
+    - https://attack.mitre.org/groups/G1051/
+    - https://attack.mitre.org/techniques/T1059/001/
+    - https://attack.mitre.org/techniques/T1027/010/
+author: Generated (sigma authored on Corbin Griffin's behalf) — see repo README scope note
+date: 2026-06-30
+tags:
+    - attack.execution
+    - attack.defense-evasion
+    - attack.t1059.001
+    - attack.t1027.010
+logsource:
+    category: process_creation
+    product: windows
+detection:
+    selection_img:
+        - Image|endswith: '\powershell.exe'
+        - Image|endswith: '\pwsh.exe'
+        - OriginalFileName:
+              - 'PowerShell.EXE'
+              - 'pwsh.dll'
+    selection_enc:
+        CommandLine|contains:
+            - ' -enc '
+            - ' -encodedcommand '
+            - ' -ec '
+            - ' -e '
+    condition: all of selection_*
+falsepositives:
+    - Legitimate administrative or software-deployment scripts that pass encoded commands
+    - Some management tooling invokes PowerShell with encoded payloads by design
+level: medium

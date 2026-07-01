@@ -1,0 +1,47 @@
+title: Medusa - BYOVD Security Tool Disabling (Process-Creation Proxy)
+id: 40d2a4ae-afb3-46c5-8961-7298c26ef48d
+status: experimental
+description: |
+    Detects process-creation-visible artifacts of Medusa's Bring-Your-Own-Vulnerable-
+    Driver (BYOVD) tool-disabling activity, mapping to Disable or Modify Tools (T1685),
+    with the driver load/install context of Windows Service (T1543.003) and signed-
+    driver trust abuse (Code Signing, T1553.002). Medusa loads a vulnerable/signed
+    driver and uses tools such as gaze.exe to terminate AV/EDR.
+
+    SCOPE NOTE: This is a WEAK process-creation proxy. Real coverage of BYOVD requires
+    driver_load events (Sysmon Event ID 6) matching known-vulnerable driver hashes/names,
+    plus a YARA rule for the driver and killer binaries (e.g. smuol.sys, gaze.exe).
+    This rule matches known tool/driver name artifacts and service-control of drivers
+    only; treat as a starting signal, not authoritative detection. NOT lab-validated.
+references:
+    - https://www.cisa.gov/news-events/cybersecurity-advisories/aa25-071a
+    - https://attack.mitre.org/groups/G1051/
+    - https://attack.mitre.org/techniques/T1685/
+    - https://attack.mitre.org/techniques/T1543/003/
+    - https://attack.mitre.org/techniques/T1553/002/
+author: Generated (sigma authored on Corbin Griffin's behalf) — see repo README scope note
+date: 2026-06-30
+tags:
+    - attack.defense-evasion
+    - attack.t1685
+    - attack.t1543.003
+    - attack.t1553.002
+logsource:
+    category: process_creation
+    product: windows
+detection:
+    selection_toolname:
+        - Image|endswith: '\gaze.exe'
+        - CommandLine|contains:
+              - 'gaze.exe'
+              - 'smuol.sys'
+    selection_sc_driver:
+        Image|endswith: '\sc.exe'
+        CommandLine|contains|all:
+            - 'create'
+            - 'type= kernel'
+    condition: 1 of selection_*
+falsepositives:
+    - Legitimate kernel driver installation via sc.exe by drivers or software
+    - Benign binaries that happen to share a matched name
+level: high

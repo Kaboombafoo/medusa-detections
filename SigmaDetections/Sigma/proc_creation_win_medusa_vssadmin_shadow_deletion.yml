@@ -1,0 +1,36 @@
+title: Medusa - Volume Shadow Copy Deletion via Vssadmin
+id: 7b8ae0eb-e331-4143-a6de-5a4ef908a530
+status: experimental
+description: |
+    Detects deletion of volume shadow copies using vssadmin.exe, a signature
+    Inhibit System Recovery behavior (T1490) used by Medusa ransomware to prevent
+    restoration of encrypted files. Matches on the vssadmin binary identity
+    (including renamed copies via OriginalFileName) plus the required 'delete'
+    and 'shadows' command-line tokens, independent of optional flags such as
+    /all or /quiet.
+references:
+    - https://www.cisa.gov/news-events/cybersecurity-advisories/aa25-071a
+    - https://attack.mitre.org/software/S1244/
+    - https://attack.mitre.org/groups/G1051/
+    - https://attack.mitre.org/techniques/T1490/
+author: Corbin Griffin
+date: 2026-06-30
+tags:
+    - attack.impact
+    - attack.t1490
+logsource:
+    category: process_creation
+    product: windows
+detection:
+    selection_img:
+        - Image|endswith: '\vssadmin.exe'
+        - OriginalFileName: 'VSSADMIN.EXE'
+    selection_cli:
+        CommandLine|contains|all:
+            - 'delete'
+            - 'shadows'
+    condition: all of selection_*
+falsepositives:
+    - Legitimate backup or storage-management software that prunes old shadow copies
+    - Administrators manually clearing shadow copies during maintenance
+level: high

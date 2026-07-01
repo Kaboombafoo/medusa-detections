@@ -1,0 +1,45 @@
+title: Medusa - RDP Enablement via Registry and Firewall
+id: 6cd18af5-5524-48b5-8100-73ab2c97e47e
+status: experimental
+description: |
+    Detects command-line enablement of Remote Desktop, mapping to Modify Registry
+    (T1112) and Disable or Modify System Firewall (T1686). Medusa operators enable
+    RDP by flipping fDenyTSConnections / DisableRestrictedAdmin registry keys and
+    opening a firewall rule for port 3389 (openrdp.bat).
+
+    SCOPE NOTE: This process_creation rule catches the behavior when performed via
+    reg.exe and netsh.exe command lines. The registry writes themselves are better
+    detected via registry_set events (Sysmon Event ID 13); a production deployment
+    should add a registry_set rule for these keys. Included here as the
+    process-creation-visible proxy.
+references:
+    - https://www.cisa.gov/news-events/cybersecurity-advisories/aa25-071a
+    - https://attack.mitre.org/groups/G1051/
+    - https://attack.mitre.org/techniques/T1112/
+    - https://attack.mitre.org/techniques/T1686/
+author: Generated (sigma authored on Corbin Griffin's behalf) — see repo README scope note
+date: 2026-06-30
+tags:
+    - attack.defense-evasion
+    - attack.t1112
+    - attack.t1686
+logsource:
+    category: process_creation
+    product: windows
+detection:
+    selection_reg_rdp:
+        Image|endswith: '\reg.exe'
+        CommandLine|contains: 'fDenyTSConnections'
+    selection_reg_restrictedadmin:
+        Image|endswith: '\reg.exe'
+        CommandLine|contains: 'DisableRestrictedAdmin'
+    selection_fw:
+        Image|endswith: '\netsh.exe'
+        CommandLine|contains|all:
+            - 'firewall'
+            - '3389'
+    condition: 1 of selection_*
+falsepositives:
+    - Legitimate administrative enablement of RDP or firewall changes for remote support
+    - IT tooling that opens RDP for managed remote access
+level: medium
